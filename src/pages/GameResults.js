@@ -7,7 +7,8 @@ import { getShareUrl } from '../utils/createShare'
 
 const useStyles = makeStyles(theme => ({
   root: {
-    padding: theme.spacing(5),
+    paddingTop: theme.spacing(5),
+    paddingBottom: theme.spacing(2),
   },
   card: {
     maxWidth: 345,
@@ -39,26 +40,27 @@ export const GameResults = ({results, back}) => {
 
   const formResultsDiv = (title, output) => {
     return (
-      <>
-       <Grid item xs={4} className={classes.title}>
-        <Typography variant="body1" component="span" color='error' className={classes.title}>{translation[title]}</Typography>
+      <React.Fragment key={title}>
+       <Grid item xs={4} className={classes.title} >
+        <Typography variant="body1" component="span" color='primary' className={classes.title}>{translation[title]}</Typography>
       </Grid>
-      <Grid item xs={8} className={classes.condition}>
+      <Grid item xs={8} className={classes.condition} >
         <Typography variant="body2" color="textSecondary" component="span">{output.map(out => out.name_rus).join(', ')}</Typography>
       </Grid>      
-      </>
+      </React.Fragment>
     )
   }
 
   const link = getShareUrl(results)
 
   return (
-    <div className={classes.root}>
+    <div>
       <Card className={classes.card}>
         <CardMedia
           className={classes.media}
-          image={process.env.PUBLIC_URL+"/images/card.jpg"}
+          image={process.env.PUBLIC_URL+"/images/card-header.png"}
           title="Contemplative Reptile"
+          onClick={back}
         />
         <CardContent>
           <Typography gutterBottom variant="h5" component="h2">

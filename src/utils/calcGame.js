@@ -7,7 +7,18 @@ const getMax = (data, condition) => {
   else return data
 }
 
-const getCondition = async(data, condition, getNoun) => {
+const createData = (data, condition) => {
+  if (condition !== 'character') return data
+
+  const newData = [...data, ...data.filter(char => char.main)]
+
+  return newData
+}
+
+const getCondition = async(basicData, condition, getNoun) => {
+
+  const data = createData(basicData, condition)
+
   const maxNumber = getMax(data, condition)
 
   const var1 = getRandom(0, maxNumber)
@@ -29,6 +40,7 @@ const getCondition = async(data, condition, getNoun) => {
 export const getResults = async (masterData, conditions, getNounFuction) => {
   let results = {}
 
+//console.log('calcGame', masterData)
   for (let key of Object.keys(conditions)) {
     if (conditions[key]) {
       const res = await getCondition(masterData[key], key, getNounFuction)

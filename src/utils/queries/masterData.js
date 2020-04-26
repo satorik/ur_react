@@ -5,6 +5,7 @@ export const GET_MASTER_DATA =  gql`{
 		character{
 			id
 			name_rus
+      main
 		}
 		location{
 			id

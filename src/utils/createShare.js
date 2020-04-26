@@ -10,16 +10,19 @@ const translation = {
 export const getShareUrl = (results) => {
 
   const href="https://twitter.com/intent/tweet"
-  const dataUrl="https://yandex.ru"
+  const dataUrl="https://ur.a-gon.ru"
   const dataHashtags="urgame"
 
   let textRes = ''
 
-  Object.keys(results).forEach(key => {
-    textRes = textRes+translation[key]+': '+results[key].map(out => out.name_rus).join(' и ')+'; '
+  Object.keys(results).forEach((key, idx) => {
+    textRes = textRes+translation[key]+': '+results[key].map(out => out.name_rus).join(' и ')
+    if (idx !== results.length-1) {
+      textRes = textRes+'; '
+    }
   }) 
 
-  const link = href+'?text='+encodeURIComponent(textRes)+';url='+encodeURIComponent(dataUrl)+';hashtags='+dataHashtags
+  const link = href+'?text='+encodeURIComponent(textRes)+';hashtags='+dataHashtags+';url='+encodeURIComponent(dataUrl)
 
   return link
 }

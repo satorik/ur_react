@@ -1,22 +1,29 @@
 import React from 'react'
-import { useQuery, useLazyQuery, useMutation } from '@apollo/client'
+import { useQuery, useMutation } from '@apollo/client'
 import * as queries from '../utils/queries/masterData'
-import { Paper, Tabs, Tab, Container } from '@material-ui/core'
+import { Paper, Tabs, Tab, Container, Typography } from '@material-ui/core'
 import { makeStyles } from '@material-ui/core/styles'
 import {GameConditions} from './GameConditions'
 import Spinner from '../components/UI/Spinner'
 import {GameResults} from './GameResults'
+import {ErrorComponent} from '../components/Error/ErrorComponent'
+import {DialogBasic} from '../components/UI/DialogBasic'
+
 
 import {getResults} from '../utils/calcGame'
 
 const useStyles = makeStyles(theme => ({
   container: {
-    marginTop: theme.spacing(5)
+    marginTop: theme.spacing(5),
+    marginBottom: theme.spacing(2)
+  },
+  tab: {
+    fontSize: '1.2rem'
   }
 }))
 
 
-export const Game = () => {
+export const Game = ({oldEnough}) => {
 
   const classes = useStyles()
 
@@ -25,21 +32,37 @@ export const Game = () => {
     show: false, 
     results: {}
   })
+  const [dialog, setDialog] = React.useState({
+    dialogOpen: !oldEnough,
+    checked: true
+  })
+
+  const [showContent, setShowContent] =  React.useState(oldEnough)
 
   const { loading: queryLodading, error: queryError, data } = useQuery(queries.GET_MASTER_DATA)
   const [getNounById, {loading: nounLoading, error: nounError}]  = useMutation(queries.GET_NOUN)
-  const [createGame, {loading: gameLoading, error: gameError}]  = useMutation(queries.CREATE_GAME)
+  //const [createGame, {loading: gameLoading, error: gameError}]  = useMutation(queries.CREATE_GAME)
 
-  if (queryLodading) return <Spinner />
+  if (queryLodading || nounLoading ) return <Spinner />
+  if (queryError || nounError) return <ErrorComponent />
 
   const { getMasterData } = data
+
+  const handleUserConsent = () => {
+    if (dialog.checked) {
+      localStorage.setItem("oe", "true")
+    }
+
+    setDialog({...dialog, dialogOpen:false})
+    setShowContent(true)
+  }
 
   const handleChange = (event, newValue) => {
     setValue(newValue)
   }
 
   const chooseYourGame = async (conditions) => {
-   
+//    console.log('Game', conditions)
     const results = await getResults(getMasterData, conditions, getNounById)
     const inputConditions = Object.keys(results)
       .map(key => results[key]
@@ -59,7 +82,20 @@ export const Game = () => {
 
   return (
     <Container fixed className={classes.container}>
-      {!results.show && <><Paper square>
+      {
+        dialog.dialogOpen && <DialogBasic 
+          open={dialog.dialogOpen}
+          handleClose={() => setDialog({...dialog, dialogOpen: false})}
+          handleCancel={() => setDialog({...dialog, dialogOpen: false})} 
+          checked={dialog.checked}
+          handleChangeSaveChoice={() => setDialog({...dialog, checked: !dialog.checked})}
+          handleAgree={handleUserConsent}
+          agreeText="Мне есть 18"
+          disagreeText="Мне нет 18" 
+        />
+      }
+
+      {!results.show && showContent && <><Paper square>
         <Tabs
           value={value}
           indicatorColor="primary"
@@ -67,15 +103,15 @@ export const Game = () => {
           onChange={handleChange}
           variant="fullWidth"
         >
-          <Tab label="Простая игра" />
-          <Tab label="Сложная игра" />
-          <Tab label="Результаты" disabled />
+          <Tab label="Простая игра" className={classes.tab} />
+          <Tab label="Сложная игра" className={classes.tab} />
+          <Tab label="FAQ" disabled className={classes.tab} />
         </Tabs>
       </Paper>
       <GameConditions variant = {value} gameOn={chooseYourGame}/></>
       }
       {
-        results.show && <GameResults results={results.results} back={() => setResults({show: false, results: {}})} />
+        results.show && showContent && <GameResults results={results.results} back={() => setResults({show: false, results: {}})} />
       }
     </Container>
 
