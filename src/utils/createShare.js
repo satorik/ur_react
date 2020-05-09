@@ -17,12 +17,14 @@ export const getShareUrl = (results) => {
 
   Object.keys(results).forEach((key, idx) => {
     textRes = textRes+translation[key]+': '+results[key].map(out => out.name_rus).join(' и ')
-    if (idx !== results.length-1) {
-      textRes = textRes+'; '
+    if (idx !== (results.length-1)) {
+      textRes = textRes+', '
     }
   }) 
 
-  const link = href+'?text='+encodeURIComponent(textRes)+';hashtags='+dataHashtags+';url='+encodeURIComponent(dataUrl)
+  if (textRes.substr(textRes.length -2, 2) === ', ') textRes = textRes.substr(0, textRes.length-2)
+
+  const link = href+'?text='+encodeURIComponent(textRes)+'&hashtags='+dataHashtags+'&url='+encodeURIComponent(dataUrl)
 
   return link
 }

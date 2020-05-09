@@ -29,7 +29,56 @@ export const GET_MASTER_DATA =  gql`{
 
 export const GET_NOUN =  gql`
 mutation getNounById($id: ID!) {
-	getNoun(id: $id){
+	getRandomNoun(id: $id){
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_NOUN =  gql`
+mutation getRandomNoun {
+	getRandomNoun{
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_RAITING =  gql`
+mutation getRandomRaiting {
+	getRandomRaiting{
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_CHARACTER =  gql`
+mutation getRandomCharacter {
+	getRandomCharacter{
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_LOCATION =  gql`
+mutation getRandomLocation {
+	getRandomLocation{
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_GENRE =  gql`
+mutation getRandomGenre {
+	getRandomGenre{
+    id
+		name_rus
+	}
+}`
+
+export const GET_RANDOM_TROP =  gql`
+mutation getRandomTrop {
+	getRandomTrop {
+    id
 		name_rus
 	}
 }`

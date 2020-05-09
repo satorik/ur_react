@@ -7,6 +7,8 @@ import { Paper, FormControl, FormGroup, FormLabel, Switch, FormControlLabel, For
 
 const TOOLTIP = 'Осторожно! База слов - АГОНЬ! В смысле полный словарь Ожегова, без шуток!'
 
+
+
 const useStyles = makeStyles(theme => ({
   paper: {
     padding: theme.spacing(5)
@@ -20,55 +22,9 @@ const useStyles = makeStyles(theme => ({
   }
 }))
 
-const checkConditions = (conditions) => {
-  let nonChecked = true
-
-  Object.keys(conditions).forEach(key =>  nonChecked = nonChecked && !conditions[key])
-
-  return nonChecked
-}
-
-export const GameConditions = ({variant, gameOn}) => {
+export const GameConditions = ({variant, handleChange, handleGame, nonChecked, state}) => {
 
   const classes = useStyles()
-
-  const [state, setState] = React.useState({
-    character: true,
-    genre: true,
-    location: true,
-    raiting: true,
-    trop: true,
-    noun: false
-  })
-
-  const [nonChecked, setNonChecked] = React.useState(false)
-
-  React.useEffect(() => {
-    if (variant === 0) {
-      setNonChecked(false)
-      setState({
-        character: true,
-        genre: false,
-        location: false,
-        raiting: false,
-        trop: false,
-        noun: false
-      })
-    }
-    if (variant === 1) setNonChecked(checkConditions(state))
-  }, [variant])
-
-  
-
-  const handleChange = (event) => {
-    setState({ ...state, [event.target.name]: event.target.checked })
-    if (checkConditions({ ...state, [event.target.name]: event.target.checked })) setNonChecked(true)
-    else setNonChecked(false)
-  }
-
-  const handleGame = () => {
-    if (!checkConditions(state)) gameOn(state)
-  }
 
   const formConditions =
     <FormControl component="fieldset" fullWidth>

@@ -59,7 +59,7 @@ export const GameResults = ({results, back}) => {
         <CardMedia
           className={classes.media}
           image={process.env.PUBLIC_URL+"/images/card-header.png"}
-          title="Contemplative Reptile"
+          title="Нечистая Юдоль"
           onClick={back}
         />
         <CardContent>

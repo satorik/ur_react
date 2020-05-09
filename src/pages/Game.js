@@ -8,9 +8,34 @@ import Spinner from '../components/UI/Spinner'
 import {GameResults} from './GameResults'
 import {ErrorComponent} from '../components/Error/ErrorComponent'
 import {DialogBasic} from '../components/UI/DialogBasic'
-
-
 import {getResults} from '../utils/calcGame'
+import {TextFaq} from '../components/TextFaq'
+
+const CONDITION_BASIS = [{
+  character: true,
+  genre: false,
+  location: false,
+  raiting: false,
+  trop: false,
+  noun: false
+},
+{
+  character: true,
+  genre: true,
+  location: true,
+  raiting: true,
+  trop: true,
+  noun: false
+}]
+
+
+const checkConditions = (conditions) => {
+  let nonChecked = true
+
+  Object.keys(conditions).forEach(key =>  nonChecked = nonChecked && !conditions[key])
+
+  return nonChecked
+}
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -27,26 +52,50 @@ export const Game = ({oldEnough}) => {
 
   const classes = useStyles()
 
-  const [value, setValue] = React.useState(0)
-  const [results, setResults] = React.useState({
-    show: false, 
-    results: {}
-  })
-  const [dialog, setDialog] = React.useState({
-    dialogOpen: !oldEnough,
-    checked: true
-  })
-
+  const [variant, setVariant] = React.useState(0)
+  const [results, setResults] = React.useState({show: false, results: {}})
+  const [dialog, setDialog] = React.useState({dialogOpen: !oldEnough, checked: false})
   const [showContent, setShowContent] =  React.useState(oldEnough)
+  const [conditions, setConditions] = React.useState(CONDITION_BASIS[variant])
+  const [nonChecked, setNonChecked] = React.useState(false)
 
-  const { loading: queryLodading, error: queryError, data } = useQuery(queries.GET_MASTER_DATA)
-  const [getNounById, {loading: nounLoading, error: nounError}]  = useMutation(queries.GET_NOUN)
-  //const [createGame, {loading: gameLoading, error: gameError}]  = useMutation(queries.CREATE_GAME)
+  React.useEffect(() => {
+    
+    if (variant === 0) {
+      setNonChecked(false)
+      setConditions(CONDITION_BASIS[variant])
+    }
+    if (variant === 1) {
+      setNonChecked(checkConditions(conditions))
+      setConditions(CONDITION_BASIS[variant])
+    }
 
-  if (queryLodading || nounLoading ) return <Spinner />
-  if (queryError || nounError) return <ErrorComponent />
+  }, [variant])
 
-  const { getMasterData } = data
+  const [getRandomNoun, {loading: nounLoading}]  = useMutation(queries.GET_RANDOM_NOUN)
+  const [getRandomRaiting, {loading: raitingLoading}]  = useMutation(queries.GET_RANDOM_RAITING)
+  const [getRandomCharacter, {loading: characterLoading}]  = useMutation(queries.GET_RANDOM_CHARACTER)
+  const [getRandomLocation, {loading: locationLoading}]  = useMutation(queries.GET_RANDOM_LOCATION)
+  const [getRandomGenre, {loading: genreLoading}]  = useMutation(queries.GET_RANDOM_GENRE)
+  const [getRandomTrop, {loading: tropLoading}]  = useMutation(queries.GET_RANDOM_TROP)
+
+  if (nounLoading || raitingLoading || characterLoading || locationLoading || genreLoading || tropLoading) return <Spinner />
+
+  const RANDOM_MATRIX = {
+    'noun': {'func': () => getRandomNoun(), 'name': 'getRandomNoun'},
+    'raiting': {'func': () => getRandomRaiting(), 'name': 'getRandomRaiting'},
+    'character': {'func': () => getRandomCharacter(), 'name': 'getRandomCharacter'},
+    'location': {'func': () => getRandomLocation(), 'name': 'getRandomLocation'},
+    'genre': {'func': () => getRandomGenre(), 'name': 'getRandomGenre'},
+    'trop' : {'func': () => getRandomTrop(), 'name': 'getRandomTrop'},
+  }
+   
+
+  const handleCheckChange = (event) => {
+    setConditions({ ...conditions, [event.target.name]: event.target.checked })
+    if (checkConditions({ ...conditions, [event.target.name]: event.target.checked })) setNonChecked(true)
+    else setNonChecked(false)
+  }
 
   const handleUserConsent = () => {
     if (dialog.checked) {
@@ -58,25 +107,15 @@ export const Game = ({oldEnough}) => {
   }
 
   const handleChange = (event, newValue) => {
-    setValue(newValue)
+    setVariant(newValue)
   }
 
-  const chooseYourGame = async (conditions) => {
-//    console.log('Game', conditions)
-    const results = await getResults(getMasterData, conditions, getNounById)
-    const inputConditions = Object.keys(results)
-      .map(key => results[key]
-      .map(item => {
-        return {
-          conditionType: key,
-          conditionId: +item.id
-      }
-      }))
-      .flat(1)
+  const chooseYourGame = async () => {
 
-    // const inputData = {conditions: inputConditions}
-    //const game = await createGame({variables: {inputData}})
-    setResults({...results, show: true, results})
+    if (!checkConditions(conditions)) {
+      const results = await getResults(RANDOM_MATRIX, conditions)
+      setResults({...results, show: true, results})
+    }
   }
 
 
@@ -97,7 +136,7 @@ export const Game = ({oldEnough}) => {
 
       {!results.show && showContent && <><Paper square>
         <Tabs
-          value={value}
+          value={variant}
           indicatorColor="primary"
           textColor="primary"
           onChange={handleChange}
@@ -105,10 +144,22 @@ export const Game = ({oldEnough}) => {
         >
           <Tab label="Простая игра" className={classes.tab} />
           <Tab label="Сложная игра" className={classes.tab} />
-          <Tab label="FAQ" disabled className={classes.tab} />
+          <Tab label="FAQ" className={classes.tab} />
         </Tabs>
       </Paper>
-      <GameConditions variant = {value} gameOn={chooseYourGame}/></>
+      {(variant === 0 || variant === 1) && <GameConditions 
+        variant={variant} 
+        gameOn={chooseYourGame} 
+        handleChange={handleCheckChange}
+        handleGame={chooseYourGame}
+        nonChecked={nonChecked}
+        state={conditions}
+      />}
+      {
+        variant === 2 && <TextFaq />
+      }
+      
+      </>
       }
       {
         results.show && showContent && <GameResults results={results.results} back={() => setResults({show: false, results: {}})} />

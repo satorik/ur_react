@@ -25,8 +25,8 @@ const getCondition = async(basicData, condition, getNoun) => {
 
   if (condition === 'character') {
     const var2 = getRandom(0, maxNumber)
-    //если тот же самый, то второго нету
-    return {[condition]: [data[var1], data[var2]]}
+    if (data[var1] === data[var2]) return  {[condition]: [data[var1]]}
+    else return {[condition]: [data[var1], data[var2]]}
   }
   if (condition === 'noun') {
     const noun = await getNoun({variables: {id: var1}})
@@ -37,16 +37,16 @@ const getCondition = async(basicData, condition, getNoun) => {
 
 }
 
-export const getResults = async (masterData, conditions, getNounFuction) => {
+export const getResults = async (funcMatrix, conditions) => {
   let results = {}
 
 //console.log('calcGame', masterData)
   for (let key of Object.keys(conditions)) {
     if (conditions[key]) {
-      const res = await getCondition(masterData[key], key, getNounFuction)
+      const res = await funcMatrix[key].func()
       results = {
         ...results,
-        ...res
+        [key]: res.data[funcMatrix[key].name]
       }
     }
   }
