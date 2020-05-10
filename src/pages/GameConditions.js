@@ -1,13 +1,10 @@
 import React from 'react'
-
 import { makeStyles } from '@material-ui/core/styles'
-
-import { Paper, FormControl, FormGroup, FormLabel, Switch, FormControlLabel, FormHelperText, Button, Typography, Tooltip } from '@material-ui/core'
+import { Paper, FormControl, FormGroup, FormLabel, Switch, FormControlLabel, Button, Typography, Tooltip, TextField } from '@material-ui/core'
+import Autocomplete from '@material-ui/lab/Autocomplete'
 
 
 const TOOLTIP = 'Осторожно! База слов - АГОНЬ! В смысле полный словарь Ожегова, без шуток!'
-
-
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -19,12 +16,27 @@ const useStyles = makeStyles(theme => ({
   },
   btn: {
     color: theme.palette.primary.secondary,
+  },
+  autocomplete: {
+    margin: 'auto',
+    marginBottom: theme.spacing(2)
   }
 }))
 
-export const GameConditions = ({variant, handleChange, handleGame, nonChecked, state}) => {
+export const GameConditions = ({variant, handleChange, handleGame, nonChecked, state, fandoms, handleFandom, fandom}) => {
 
   const classes = useStyles()
+
+  const fandomSelect = <Autocomplete
+    id="fandomBox"
+    options={fandoms}
+    size="small"
+    value={fandom ? fandom : null}
+    getOptionLabel={(option) => option.name_rus}
+    className={classes.autocomplete}
+    renderInput={(params) => <TextField {...params} label="Выберите фандом" variant="outlined" />}
+    onChange={handleFandom}
+  />
 
   const formConditions =
     <FormControl component="fieldset" fullWidth>
@@ -65,10 +77,16 @@ export const GameConditions = ({variant, handleChange, handleGame, nonChecked, s
 
 
   return (
+
     <Paper className={classes.paper}>
       { nonChecked && <Typography variant="body1" component="p" color='error' className={classes.error} >Выберите хотя бы одно условие</Typography>}
-      {variant === 1 && formConditions}
-      {gameButton}
+      {fandoms && <> 
+        {fandomSelect}
+        {variant === 1 && formConditions}
+        {variant === 0 && <Typography variant="body1" component="p" color='textSecondary' gutterBottom>без выбора фандома доступна только "Сложная игра"</Typography>}
+        {gameButton}
+      </>}
+
     </Paper>
   )
 }

@@ -7,9 +7,10 @@ import {GameConditions} from './GameConditions'
 import Spinner from '../components/UI/Spinner'
 import {GameResults} from './GameResults'
 import {ErrorComponent} from '../components/Error/ErrorComponent'
-import {DialogBasic} from '../components/UI/DialogBasic'
+import {DialogBasic} from '../components/UI/DialogAge'
 import {getResults} from '../utils/calcGame'
 import {TextFaq} from '../components/TextFaq'
+import {DialogSimple} from '../components/UI/DialogSimple'
 
 const CONDITION_BASIS = [{
   character: true,
@@ -53,24 +54,28 @@ export const Game = ({oldEnough}) => {
   const classes = useStyles()
 
   const [variant, setVariant] = React.useState(0)
+  const [fandom, setFandom] = React.useState(null)
+  const [noFandom, setNoFandom] = React.useState(false)
   const [results, setResults] = React.useState({show: false, results: {}})
   const [dialog, setDialog] = React.useState({dialogOpen: !oldEnough, checked: false})
   const [showContent, setShowContent] =  React.useState(oldEnough)
   const [conditions, setConditions] = React.useState(CONDITION_BASIS[variant])
   const [nonChecked, setNonChecked] = React.useState(false)
 
-  React.useEffect(() => {
-    
+  React.useEffect(() => {  
     if (variant === 0) {
       setNonChecked(false)
+      setNoFandom(false)
       setConditions(CONDITION_BASIS[variant])
     }
     if (variant === 1) {
       setNonChecked(checkConditions(conditions))
+      setNoFandom(false)
       setConditions(CONDITION_BASIS[variant])
     }
-
   }, [variant])
+
+  const { loading: queryLodading, error: queryError, data } = useQuery(queries.GET_FANDOMS)
 
   const [getRandomNoun, {loading: nounLoading}]  = useMutation(queries.GET_RANDOM_NOUN)
   const [getRandomRaiting, {loading: raitingLoading}]  = useMutation(queries.GET_RANDOM_RAITING)
@@ -79,13 +84,14 @@ export const Game = ({oldEnough}) => {
   const [getRandomGenre, {loading: genreLoading}]  = useMutation(queries.GET_RANDOM_GENRE)
   const [getRandomTrop, {loading: tropLoading}]  = useMutation(queries.GET_RANDOM_TROP)
 
-  if (nounLoading || raitingLoading || characterLoading || locationLoading || genreLoading || tropLoading) return <Spinner />
+  if (queryLodading || nounLoading || raitingLoading || characterLoading || locationLoading || genreLoading || tropLoading) return <Spinner />
+  if (queryError) return ErrorComponent
 
   const RANDOM_MATRIX = {
     'noun': {'func': () => getRandomNoun(), 'name': 'getRandomNoun'},
     'raiting': {'func': () => getRandomRaiting(), 'name': 'getRandomRaiting'},
-    'character': {'func': () => getRandomCharacter(), 'name': 'getRandomCharacter'},
-    'location': {'func': () => getRandomLocation(), 'name': 'getRandomLocation'},
+    'character': {'func': () => getRandomCharacter({variables: {fandomId: fandom.id}}), 'name': 'getRandomCharacter'},
+    'location': {'func': () => getRandomLocation({variables: {fandomId: fandom.id}}), 'name': 'getRandomLocation'},
     'genre': {'func': () => getRandomGenre(), 'name': 'getRandomGenre'},
     'trop' : {'func': () => getRandomTrop(), 'name': 'getRandomTrop'},
   }
@@ -95,6 +101,14 @@ export const Game = ({oldEnough}) => {
     setConditions({ ...conditions, [event.target.name]: event.target.checked })
     if (checkConditions({ ...conditions, [event.target.name]: event.target.checked })) setNonChecked(true)
     else setNonChecked(false)
+  }
+
+  const handleFandomCheck = () => {
+    if (fandom === null && (conditions.character === true || conditions.location === true)) {
+      setNoFandom(true)
+      return true
+    }
+    else return false
   }
 
   const handleUserConsent = () => {
@@ -110,14 +124,27 @@ export const Game = ({oldEnough}) => {
     setVariant(newValue)
   }
 
-  const chooseYourGame = async () => {
+  const handleFandom = (event, value, reason) => {
+    setFandom(value)
+  }
 
+  const handleGameWithoutFandom = async () => {
+    const newConditions = { ...conditions, 'character': false, 'location': false }
+    setConditions(newConditions)
+    setNoFandom(false)
     if (!checkConditions(conditions)) {
-      const results = await getResults(RANDOM_MATRIX, conditions)
+      const results = await getResults(RANDOM_MATRIX, newConditions)
       setResults({...results, show: true, results})
     }
   }
 
+  const chooseYourGame = async () => {
+    const isFandom = handleFandomCheck()
+    if (!checkConditions(conditions) && !isFandom) {
+      const results = await getResults(RANDOM_MATRIX, conditions)
+      setResults({...results, show: true, results})
+    }
+  }
 
   return (
     <Container fixed className={classes.container}>
@@ -131,6 +158,16 @@ export const Game = ({oldEnough}) => {
           handleAgree={handleUserConsent}
           agreeText="Мне есть 18"
           disagreeText="Мне нет 18" 
+        />
+      }
+      {
+        (noFandom && variant === 1) && <DialogSimple 
+          open = {noFandom}
+          handleClose={ () => setNoFandom(false)}
+          handleAgree={handleGameWithoutFandom}
+          contentText="Вы не выбрали фандом! В этом случае карточка игры не будет содержать персонажей и локаций."
+          cancelText="ИЗМЕНИТЬ ПАРАМЕТРЫ"
+          continueText="ИГРАТЬ"
         />
       }
 
@@ -154,6 +191,10 @@ export const Game = ({oldEnough}) => {
         handleGame={chooseYourGame}
         nonChecked={nonChecked}
         state={conditions}
+        fandom={fandom}
+        fandoms={data.fandom}
+        handleFandom = {handleFandom}
+        noFandom = {noFandom}
       />}
       {
         variant === 2 && <TextFaq />

@@ -1,31 +1,12 @@
 import { gql } from '@apollo/client'
 
-export const GET_MASTER_DATA =  gql`{
-	getMasterData(fandom: 1){
-		character{
-			id
-			name_rus
-      main
-		}
-		location{
-			id
-			name_rus
-		}
-		genre{
-			id
-			name_rus
-		}
-		raiting{
-			id
-			name_rus
-		}
-		trop{
-			id
-			name_rus
-		}
-    noun
-	}
-}`
+export const GET_FANDOMS =  gql`{
+	fandom {
+		id
+    name_rus
+  }
+}
+`
 
 export const GET_NOUN =  gql`
 mutation getNounById($id: ID!) {
@@ -52,16 +33,16 @@ mutation getRandomRaiting {
 }`
 
 export const GET_RANDOM_CHARACTER =  gql`
-mutation getRandomCharacter {
-	getRandomCharacter{
+mutation getRandomCharacter($fandomId: ID!) {
+	getRandomCharacter(fandomId: $fandomId){
     id
 		name_rus
 	}
 }`
 
 export const GET_RANDOM_LOCATION =  gql`
-mutation getRandomLocation {
-	getRandomLocation{
+mutation getRandomLocation($fandomId: ID!) {
+	getRandomLocation(fandomId: $fandomId){
     id
 		name_rus
 	}
